@@ -30,7 +30,12 @@ app.use("/api/citas", citaRoutes);
 app.use("/api/usuarios", userRoutes);
 app.use("/api/funcionalidades", authMiddleware, funcionalidadesRoutes); // Aplicar autenticación a funcionalidades
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
-});
+export default app;
+
+if(process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
+
