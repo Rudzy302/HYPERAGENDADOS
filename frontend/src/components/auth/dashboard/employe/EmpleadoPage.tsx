@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+interface Cita {
+  idCita: string; 
+  profesion: string;
+  fechaCita: string;
+  sede: string;
+  localidad: string;
+  estado: string;
+}
 
 const EmpleadoPage = () => {
   const [citas, setCitas] = useState<Cita[]>([]);
