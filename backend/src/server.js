@@ -17,7 +17,7 @@ app.use(
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
+    credentials: true,
   })
 );
 app.use(express.json());
