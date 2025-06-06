@@ -1,126 +1,161 @@
-// src\components\auth\dashboard\user\UserPage.tsx
+import React, { useState, useEffect } from "react";
 
-"use client"; // Asegurarse de que sea un Client Component
+interface Cita {
+  idCita: string;
+  profesion: string;
+  fechaCita: string;
+  sede: string;
+  localidad: string;
+  estado: string;
+}
 
-import React from "react";
-import { signOut } from "next-auth/react"; // Importamos la función signOut
+const EmpleadoPage = () => {
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [nuevaCita, setNuevaCita] = useState({
+    profesion: "",
+    fechaCita: "",
+    sede: "",
+    localidad: "",
+  });
 
-const UsuarioPage = () => {
-  const handleSignOut = async () => {
-    // Invalida la sesión y redirige al usuario a la página de inicio (root)
-    // donde la aplicación mostrará el login si no hay sesión activa.
-    await signOut({ callbackUrl: '/' });
+  useEffect(() => {
+    fetch("http://localhost:3000/api/citas")
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Error en la respuesta de la API", response);
+          return [];
+        }
+        return response.json();
+      })
+      .then((data) => setCitas(Array.isArray(data) ? data : []))
+      .catch((error) => console.error("Error al cargar citas", error));
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNuevaCita({ ...nuevaCita, [e.target.name]: e.target.value });
+  };
+
+  const formatFecha = (fecha: string) => {
+    if (!fecha) return "Fecha no disponible";
+    return new Date(fecha).toLocaleString();
+  };
+
+  const agregarCita = () => {
+    if (!nuevaCita.profesion || !nuevaCita.fechaCita || !nuevaCita.sede || !nuevaCita.localidad) {
+      alert("Todos los campos son obligatorios");
+      return;
+    }
+
+    fetch("http://localhost:3000/api/citas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...nuevaCita, estado: "Disponible" }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Error al agregar cita", response);
+          return null;
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data) {
+          setCitas([...citas, data]);
+        }
+      })
+      .catch((error) => console.error("Error al agregar cita", error));
+
+    setNuevaCita({ profesion: "", fechaCita: "", sede: "", localidad: "" });
+  };
+
+  const eliminarCita = (idCita: string) => {
+    fetch(`http://localhost:3000/api/citas/${idCita}`, { method: "DELETE" })
+      .then((response) => {
+        if (!response.ok) {
+          console.error("Error al eliminar cita", response);
+          return;
+        }
+        setCitas((prevCitas) => prevCitas.filter((cita) => cita.idCita !== idCita));
+      })
+      .catch((error) => console.error("Error al eliminar cita", error));
+  };
+
+  const cerrarSesion = () => {
+    window.location.href = "http://localhost:3001";
   };
 
   return (
-    <div className="bg-gray-50 font-sans antialiased text-gray-800 min-h-screen flex flex-col items-center py-8 px-4">
-      <div className="max-w-4xl w-full bg-white shadow-2xl rounded-lg p-6 md:p-8 border-t-8 border-blue-600">
-        <header className="text-center mb-8">
-            <h1 className="text-4xl font-extrabold text-blue-800 mb-2">HYPERAGENDADOS</h1>
-            <p className="text-xl text-blue-600">Tu portal para agendar citas médicas</p>
-        </header>
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-3xl font-semibold text-center text-green-800 border-b-4 border-green-500 pb-2 mb-6">
+        Panel de Empleado
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-green-100 p-6 rounded-lg border-l-4 border-green-700">
+        <input className="p-3 border rounded-lg focus:border-green-700 focus:ring-2 focus:ring-green-300"
+          type="text" name="profesion" placeholder="Profesión"
+          value={nuevaCita.profesion} onChange={handleChange} />
+        <input className="p-3 border rounded-lg focus:border-green-700 focus:ring-2 focus:ring-green-300"
+          type="datetime-local" name="fechaCita"
+          value={nuevaCita.fechaCita} onChange={handleChange} />
+        <input className="p-3 border rounded-lg focus:border-green-700 focus:ring-2 focus:ring-green-300"
+          type="text" name="sede" placeholder="Sede"
+          value={nuevaCita.sede} onChange={handleChange} />
+        <input className="p-3 border rounded-lg focus:border-green-700 focus:ring-2 focus:ring-green-300"
+          type="text" name="localidad" placeholder="Localidad"
+          value={nuevaCita.localidad} onChange={handleChange} />
+        <button className="col-span-1 md:col-span-2 bg-green-700 text-white p-3 rounded-lg font-bold hover:bg-green-600 transition"
+          onClick={agregarCita} title="Crear una nueva cita">
+          Crear Cita
+        </button>
+      </div>
 
-        {/* Cabecera de la página de usuario con botón de cerrar sesión */}
-        <div className="flex justify-between items-center mb-6 border-b pb-4 border-blue-200">
-            <h2 className="text-2xl font-semibold text-blue-700">Panel de Paciente</h2>
-            <button
-                className="bg-blue-700 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-600 transition duration-200 ease-in-out shadow-md"
-                title="Cerrar sesión"
-                onClick={handleSignOut} // Aquí está la función de cierre de sesión
-            >
-                Cerrar Sesión
-            </button>
-        </div>
-
-        {/* Filtro de Profesiones */}
-        <section className="mb-8 p-5 bg-blue-50 rounded-lg shadow-inner">
-            <h3 className="text-lg font-medium text-blue-800 mb-3">Filtrar citas por profesión:</h3>
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <select className="flex-grow p-3 border border-blue-300 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-blue-700 bg-white shadow-sm">
-                    <option value="">-- Todas las Profesiones --</option>
-                    <option value="cardiologia">Cardiología</option>
-                    <option value="dermatologia">Dermatología</option>
-                    <option value="pediatria">Pediatría</option>
-                    <option value="odontologia">Odontología</option>
-                    <option value="oftalmologia">Oftalmología</option>
-                    <option value="psicologia">Psicología</option>
-                    {/* Aquí se cargarían dinámicamente las profesiones desde la API */}
-                </select>
-                <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition duration-200 ease-in-out shadow"
-                    title="Aplicar filtro o mostrar todas las citas"
-                >
-                    Aplicar Filtro
-                </button>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">Selecciona una profesión para ver solo esas citas. Vuelve a seleccionar "Todas las Profesiones" para ver todas.</p>
-        </section>
-
-        {/* Listado de Citas */}
-        <section className="mb-6">
-            <h3 className="text-2xl font-bold text-blue-700 mb-5">Citas Disponibles y Agendadas</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                {/* EJEMPLO DE CITA DISPONIBLE */}
-                <div className="relative bg-white p-5 rounded-lg shadow-md flex flex-col border-l-6 border-blue-500 transition duration-200 ease-in-out hover:shadow-lg">
-                    <h4 className="text-xl font-bold text-blue-800 mb-2">Cita con Dr. Esteban Quito</h4>
-                    <p className="text-sm text-gray-700 mb-1"><span className="font-semibold text-blue-700">Profesión:</span> Cardiología</p>
-                    <p className="text-sm text-gray-700 mb-1"><span className="font-semibold">Fecha:</span> 15/07/2025</p>
-                    <p className="text-sm text-gray-700 mb-3"><span className="font-semibold">Hora:</span> 10:00 AM</p>
-                    <p className="text-md text-green-600 font-bold mt-auto mb-3">Estado: Disponible</p>
-                    <button className="w-full bg-blue-500 text-white py-2.5 rounded-md font-semibold hover:bg-blue-600 transition duration-200 ease-in-out" title="Agendar esta cita">
-                        Agendar Cita
-                    </button>
-                </div>
-
-                {/* EJEMPLO DE CITA AGENDADA POR EL USUARIO ACTUAL */}
-                <div className="relative bg-blue-100 p-5 rounded-lg shadow-md flex flex-col border-l-6 border-blue-700 opacity-80">
-                    <h4 className="text-xl font-bold text-blue-900 mb-2">Cita con Dra. Sofía Loren</h4>
-                    <p className="text-sm text-gray-800 mb-1"><span className="font-semibold text-blue-800">Profesión:</span> Dermatología</p>
-                    <p className="text-sm text-gray-800 mb-1"><span className="font-semibold">Fecha:</span> 10/06/2025</p>
-                    <p className="text-sm text-gray-800 mb-3"><span className="font-semibold">Hora:</span> 03:30 PM</p>
-                    <p className="text-md text-blue-900 font-bold mt-auto mb-3">Estado: Agendada (Contigo)</p>
-                    <button className="w-full bg-gray-400 text-gray-600 py-2.5 rounded-md font-semibold cursor-not-allowed" disabled title="Ya tienes esta cita agendada">
-                        Cita Agendada
-                    </button>
-                </div>
-
-                {/* OTRO EJEMPLO DE CITA DISPONIBLE */}
-                <div className="relative bg-white p-5 rounded-lg shadow-md flex flex-col border-l-6 border-blue-500 transition duration-200 ease-in-out hover:shadow-lg">
-                    <h4 className="text-xl font-bold text-blue-800 mb-2">Cita con Dr. Alejandro Sanz</h4>
-                    <p className="text-sm text-gray-700 mb-1"><span className="font-semibold text-blue-700">Profesión:</span> Pediatría</p>
-                    <p className="text-sm text-gray-700 mb-1"><span className="font-semibold">Fecha:</span> 20/07/2025</p>
-                    <p className="text-sm text-gray-700 mb-3"><span className="font-semibold">Hora:</span> 09:00 AM</p>
-                    <p className="text-md text-green-600 font-bold mt-auto mb-3">Estado: Disponible</p>
-                    <button className="w-full bg-blue-500 text-white py-2.5 rounded-md font-semibold hover:bg-blue-600 transition duration-200 ease-in-out" title="Agendar esta cita">
-                        Agendar Cita
-                    </button>
-                </div>
-
-                {/* EJEMPLO DE CITA AGENDADA POR OTRO USUARIO */}
-                <div className="relative bg-blue-100 p-5 rounded-lg shadow-md flex flex-col border-l-6 border-blue-700 opacity-80">
-                    <h4 className="text-xl font-bold text-blue-900 mb-2">Cita con Dra. Isabel Allende</h4>
-                    <p className="text-sm text-gray-800 mb-1"><span className="font-semibold text-blue-800">Profesión:</span> Cardiología</p>
-                    <p className="text-sm text-gray-800 mb-1"><span className="font-semibold">Fecha:</span> 18/06/2025</p>
-                    <p className="text-sm text-gray-800 mb-3"><span className="font-semibold">Hora:</span> 02:00 PM</p>
-                    <p className="text-md text-blue-900 font-bold mt-auto mb-3">Estado: Agendada (Por otro paciente)</p>
-                    <button className="w-full bg-gray-400 text-gray-600 py-2.5 rounded-md font-semibold cursor-not-allowed" disabled title="Esta cita ya ha sido agendada por otro paciente">
-                        No Disponible
-                    </button>
-                </div>
-
-                {/* Mensaje cuando no hay citas */}
-                <div className="md:col-span-2 lg:col-span-3 text-center p-8 text-gray-500 italic bg-gray-100 rounded-lg border border-gray-200">
-                    <p>No hay citas disponibles para mostrar con los filtros aplicados.</p>
-                    <p className="text-sm mt-2">Intenta seleccionar "Todas las Profesiones" o revisa en otra fecha.</p>
-                </div>
-
-            </div>
-        </section>
+      <h3 className="text-2xl font-semibold text-green-800 mt-6">Citas Creadas</h3>
+      <table className="w-full border-collapse border mt-4 shadow-md rounded-lg overflow-hidden">
+        <thead>
+          <tr className="bg-green-700 text-white">
+            <th className="border p-3">Profesión</th>
+            <th className="border p-3">Fecha y Hora</th>
+            <th className="border p-3">Sede</th>
+            <th className="border p-3">Localidad</th>
+            <th className="border p-3">Estado</th>
+            <th className="border p-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {citas.length > 0 ? (
+            citas.map((cita) => (
+              <tr key={cita.idCita} className="text-center even:bg-green-100 hover:bg-green-200 transition">
+                <td className="border p-3">{cita.profesion || "No especificado"}</td>
+                <td className="border p-3">{formatFecha(cita.fechaCita)}</td>
+                <td className="border p-3">{cita.sede || "No especificado"}</td>
+                <td className="border p-3">{cita.localidad || "No especificado"}</td>
+                <td className="border p-3 font-bold text-green-900">{cita.estado || "Desconocido"}</td>
+                <td className="border p-3">
+                  <button className="bg-red-600 text-white p-2 rounded-lg hover:bg-red-500 transition"
+                    onClick={() => eliminarCita(cita.idCita)} title="Eliminar esta cita">
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={6} className="text-center p-4">No hay citas registradas.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      
+      <div className="fixed bottom-6 right-6">
+        <button 
+          className="bg-red-700 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 transition shadow-lg"
+          onClick={cerrarSesion}
+          title="Cerrar sesión"
+        >
+          Cerrar Sesión
+        </button>
       </div>
     </div>
   );
 };
 
-export default UsuarioPage;
+export default EmpleadoPage;
