@@ -1,101 +1,164 @@
-"use client"; 
+"use client";
+import { useForm } from "react-hook-form";
+import { signIn } from "next-auth/react";
+import { FaUser, FaKey } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
-import React from "react";
-import { signOut } from "next-auth/react";
+interface loginProps {
+  setView: (view: "login" | "register") => void;
+  addAlert: (
+    message: string,
+    type: "success" | "error" | "warning" | "info"
+  ) => void;
+}
 
-const AdminPage = () => {
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
-  };
+const Login = ({ setView, addAlert }: loginProps) => {
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      const resAuth = await signIn("credentials", {
+        username: data.username,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (resAuth?.error) {
+        addAlert(resAuth.error, "error");
+        return;
+      }
+
+      addAlert("Inicio de sesión exitoso", "success");
+      setTimeout(() => router.push("/dashboard/"), 1500);
+    } catch (error) {
+      addAlert(`Error al conectar con el servidor ${error}`, "error");
+    }
+  });
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-3xl font-semibold text-center text-red-800 border-b-4 border-red-500 pb-2 mb-6">
-        Panel de Administrador
-      </h2>
+    <section
+      className="flex flex-col items-center bg-white shadow-md rounded-lg p-8 w-full max-w-sm mx-auto"
+      aria-labelledby="login-title"
+    >
+      <h1
+        id="login-title"
+        className="text-3xl font-bold text-gray-800 mb-2"
+      >
+        HYPERAGENDADOS
+      </h1>
+      <p className="text-gray-500 mb-6">Bienvenido</p>
+      <form
+        onSubmit={onSubmit}
+        className="w-full"
+        aria-describedby="login-description"
+      >
+        <fieldset>
+          <legend
+            id="login-description"
+            className="sr-only"
+          >
+            Formulario de inicio de sesión
+          </legend>
+          <div className="mb-4">
+            <label
+              htmlFor="username"
+              className="sr-only"
+              title="Ingrese su nombre de usuario"
+            >
+              Usuario
+            </label>
+            <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:border-sky-500">
+              <FaUser
+                className="text-gray-400"
+                aria-hidden="true"
+              />
+              <input
+                id="username"
+                className="w-full ml-2 outline-none text-gray-700"
+                type="text"
+                placeholder="Ingrese su usuario"
+                aria-required="true"
+                {...register("username", {
+                  required: "El usuario es requerido",
+                })}
+              />
+            </div>
+            {errors.username && typeof errors.username.message === "string" && (
+              <span
+                className="text-red-500 text-xs italic"
+                role="alert"
+              >
+                {errors.username.message}
+              </span>
+            )}
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-red-100 p-6 rounded-lg border-l-4 border-red-700">
-        <input
-          className="p-3 border rounded-lg focus:border-red-700 focus:ring-2 focus:ring-red-300"
-          type="text"
-          placeholder="Nombre del Usuario"
-        />
-        <input
-          className="p-3 border rounded-lg focus:border-red-700 focus:ring-2 focus:ring-red-300"
-          type="email"
-          placeholder="Correo Electrónico"
-        />
-        <select
-          className="p-3 border rounded-lg focus:border-red-700 focus:ring-2 focus:ring-red-300"
-        >
-          <option>Seleccionar Rol</option>
-          <option value="admin">Administrador</option>
-          <option value="empleado">Empleado</option>
-          <option value="usuario">Usuario</option>
-        </select>
-        <input
-          className="p-3 border rounded-lg focus:border-red-700 focus:ring-2 focus:ring-red-300"
-          type="password"
-          placeholder="Contraseña"
-        />
+          <div className="mb-4">
+            <label
+              htmlFor="password"
+              className="sr-only"
+              title="Ingrese su contraseña"
+            >
+              Contraseña
+            </label>
+            <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 focus-within:border-sky-500">
+              <FaKey
+                className="text-gray-400"
+                aria-hidden="true"
+              />
+              <input
+                id="password"
+                className="w-full ml-2 outline-none text-gray-700"
+                type="password"
+                placeholder="Ingrese su contraseña"
+                aria-required="true"
+                {...register("password", {
+                  required: "La contraseña es requerida",
+                })}
+              />
+            </div>
+            {errors.password && typeof errors.password.message === "string" && (
+              <span
+                className="text-red-500 text-xs italic"
+                role="alert"
+              >
+                {errors.password.message}
+              </span>
+            )}
+          </div>
+        </fieldset>
 
         <button
-          className="col-span-1 md:col-span-2 bg-red-700 text-white p-3 rounded-lg font-bold hover:bg-red-600 transition"
-          title="Crear un nuevo usuario"
+          type="submit"
+          className="w-full cursor-pointer bg-sky-600 text-white py-2 rounded-md shadow-md hover:bg-sky-700 transition"
+          title="Iniciar sesión en su cuenta"
         >
-          Crear Usuario
+          Iniciar sesión
         </button>
-      </div>
 
-      <h3 className="text-2xl font-semibold text-red-800 mt-6">Usuarios Registrados</h3>
-      <table className="w-full border-collapse border mt-4 shadow-md rounded-lg overflow-hidden">
-        <thead>
-          <tr className="bg-red-700 text-white">
-            <th className="border p-3">Nombre</th>
-            <th className="border p-3">Correo</th>
-            <th className="border p-3">Rol</th>
-            <th className="border p-3">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="text-center even:bg-red-100 hover:bg-red-200 transition">
-            <td className="border p-3">Juan Pérez</td>
-            <td className="border p-3">juan@example.com</td>
-            <td className="border p-3 font-semibold text-red-700">Empleado</td>
-            <td className="border p-3 flex justify-center gap-2">
-              <button
-                className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-400 transition"
-                title="Editar usuario"
-              >
-                Editar
-              </button>
-              <button
-                className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-500 transition"
-                title="Eliminar usuario"
-              >
-                Eliminar
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td colSpan={4} className="text-center p-4 text-gray-500 italic">
-              (Aquí aparecerán los usuarios una vez registrados)
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <div
+          className="text-center my-4 text-gray-500"
+          aria-hidden="true"
+        >
+          o
+        </div>
 
-      <div className="fixed bottom-6 right-6">
         <button
-          className="bg-red-700 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 transition shadow-lg"
-          title="Cerrar sesión"
-          onClick={handleSignOut} // ¡Este es el cambio clave!
+          type="button"
+          className="w-full cursor-pointer bg-gray-600 text-white py-2 rounded-md shadow-md hover:bg-gray-700 transition"
+          onClick={() => setView("register")}
+          title="Crear una nueva cuenta"
         >
-          Cerrar Sesión
+          Registrarse
         </button>
-      </div>
-    </div>
+      </form>
+    </section>
   );
 };
 
-export default AdminPage;
+export default Login;
