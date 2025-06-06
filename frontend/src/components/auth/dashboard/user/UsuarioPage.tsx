@@ -53,14 +53,15 @@ const UsuarioPage = () => {
                     Aplicar Filtro
                 </button>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Selecciona una profesión para ver solo esas citas. Vuelve a seleccionar "Todas las Profesiones" para ver todas.</p>
+            {/* CORRECCIÓN DE LA LÍNEA 56 */}
+            <p className="text-sm text-gray-500 mt-2">Selecciona una profesión para ver solo esas citas. Vuelve a seleccionar &quot;Todas las Profesiones&quot; para ver todas.</p>
         </section>
 
         {/* Listado de Citas */}
         <section className="mb-6">
             <h3 className="text-2xl font-bold text-blue-700 mb-5">Citas Disponibles y Agendadas</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:col-span-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 {/* EJEMPLO DE CITA DISPONIBLE */}
                 <div className="relative bg-white p-5 rounded-lg shadow-md flex flex-col border-l-6 border-blue-500 transition duration-200 ease-in-out hover:shadow-lg">
@@ -105,6 +106,7 @@ const UsuarioPage = () => {
                     <p className="text-sm text-gray-800 mb-1"><span className="font-semibold">Fecha:</span> 18/06/2025</p>
                     <p className="text-sm text-gray-800 mb-3"><span className="font-semibold">Hora:</span> 02:00 PM</p>
                     <p className="text-md text-blue-900 font-bold mt-auto mb-3">Estado: Agendada (Por otro paciente)</p>
+                    {/* CORRECCIÓN DE LA LÍNEA 116 */}
                     <button className="w-full bg-gray-400 text-gray-600 py-2.5 rounded-md font-semibold cursor-not-allowed" disabled title="Esta cita ya ha sido agendada por otro paciente">
                         No Disponible
                     </button>
@@ -113,7 +115,7 @@ const UsuarioPage = () => {
                 {/* Mensaje cuando no hay citas */}
                 <div className="md:col-span-2 lg:col-span-3 text-center p-8 text-gray-500 italic bg-gray-100 rounded-lg border border-gray-200">
                     <p>No hay citas disponibles para mostrar con los filtros aplicados.</p>
-                    <p className="text-sm mt-2">Intenta seleccionar "Todas las Profesiones" o revisa en otra fecha.</p>
+                    <p className="text-sm mt-2">Intenta seleccionar &quot;Todas las Profesiones&quot; o revisa en otra fecha.</p>
                 </div>
 
             </div>
