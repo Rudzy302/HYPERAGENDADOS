@@ -27,6 +27,11 @@ export default function Page() {
     setAlerts((current) => current.filter((_, i) => i !== index));
   };
 
+  // Función para lanzar un error de prueba
+  const triggerSentryError = () => {
+    throw new Error("Sentry Test Error from Page.tsx - Triggered by button");
+  };
+
   useEffect(() => {
     if (status === "authenticated") {
       router.push("/dashboard");
@@ -61,6 +66,13 @@ export default function Page() {
               addAlert={handleAddAlert}
             />
           )}
+          {/* Botón para disparar el error de Sentry */}
+          <button
+            onClick={triggerSentryError}
+            className="mt-4 p-2 bg-red-500 text-white rounded"
+          >
+            Trigger Sentry Error
+          </button>
         </div>
       </article>
     </main>
